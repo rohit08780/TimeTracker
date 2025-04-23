@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Manager Dashboard</title>
+</head>
+<body>
+  <h2>Manager Dashboard</h2>
+
+  <!-- Filter section -->
+  <label>From: <input type="date" id="startDate"></label>
+  <label>To: <input type="date" id="endDate"></label>
+  <label>Status: 
+    <select id="statusFilter">
+      <option value="">All</option>
+      <option value="pending">Pending</option>
+      <option value="approved">Approved</option>
+      <option value="rejected">Rejected</option>
+    </select>
+  </label>
+  <label>User: <input type="text" id="userFilter" placeholder="Username"></label>
+  
+  <button onclick="exportCSV()">Export as CSV</button>
+
+  <table border="1">
+    <thead>
+      <tr>
+        <th>User</th><th>Title</th><th>Date</th><th>Hours</th><th>Status</th><th>Comment</th><th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="taskTable">
+      {% for task in pending_tasks %}
+      <tr>
+        <td>{{ task.employee.username }}</td>
+        <td>{{ task.title }}</td>
+        <td>{{ task.date }}</td>
+        <td>{{ task.hours_spent }}</td>
+        <td>{{ task.status }}</td>
+        <td>
+          <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="task_id" value="{{ task.id }}">
+            <label for="manager_comment">Manager Comment</label>
+            <textarea name="manager_comment" required>{{ task.manager_comment }}</textarea><br>
+            
+            <button name="action" value="approve">Approve</button>
+            <button name="action" value="reject">Reject</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <script>
+    async function loadTasks() {
+      const start = document.getElementById('startDate').value;
+      const end = document.getElementById('endDate').value;
+      const status = document.getElementById('statusFilter').value;
+      const username = document.getElementById('userFilter').value;
+
+      // Building URL with filters
+      let url = '/api/tasks/';
+      const params = [];
+      if (start) params.push(`date_from=${start}`);
+      if (end) params.push(`date_to=${end}`);
+      if (status) params.push(`status=${status}`);
+      if (username) params.push(`user=${username}`);
+      
+      if (params.length > 0) {
+        url += '?' + params.join('&');
+      }
+
+      let res = await fetch(url, {
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+      });
+      let tasks = await res.json();
+      let html = '';
+      for (let task of tasks) {
+        html += `<tr>
+          <td>${task.user}</td>
+          <td>${task.title}</td>
+          <td>${task.date}</td>
+          <td>${task.hours_spent}</td>
+          <td>${task.status}</td>
+          <td>${task.manager_comment || ''}</td>
+          <td>
+            <button onclick="approve(${task.id})">Approve</button>
+            <button onclick="reject(${task.id})">Reject</button>
+          </td>
+        </tr>`;
+      }
+      document.getElementById('taskTable').innerHTML = html;
+    }
+
+    async function approve(id) {
+      await fetch(`/api/tasks/${id}/`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': 'Bearer ' + localStorage.getItem('token'),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: 'Approved' })
+      });
+      loadTasks();
+    }
+
+    async function reject(id) {
+      let comment = prompt("Enter rejection reason:");
+      await fetch(`/api/tasks/${id}/`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': 'Bearer ' + localStorage.getItem('token'),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: 'Rejected', manager_comment: comment })
+      });
+      loadTasks();
+    }
+
+    async function exportCSV() {
+      const start = document.getElementById('startDate').value;
+      const end = document.getElementById('endDate').value;
+      const status = document.getElementById('statusFilter').value;
+      const username = document.getElementById('userFilter').value;
+
+      // Building URL for export
+      let url = '/api/tasks/export/';
+      const params = [];
+      if (start) params.push(`date_from=${start}`);
+      if (end) params.push(`date_to=${end}`);
+      if (status) params.push(`status=${status}`);
+      if (username) params.push(`user=${username}`);
+
+      if (params.length > 0) {
+        url += '?' + params.join('&');
+      }
+
+      const res = await fetch(url, {
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+      });
+      const blob = await res.blob();
+      const urlObject = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = urlObject;
+      a.download = 'filtered_team_tasks.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    loadTasks();
+  </script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Log Task</title>
+</head>
+<body>
+  <form id="taskForm">
+    <input type="text" name="title" placeholder="Title" required><br>
+    <textarea name="description" placeholder="Description"></textarea><br>
+    <input type="number" name="hours_spent" placeholder="Hours" step="0.5" max="8" required><br>
+    <input type="text" name="tags" placeholder="Tags"><br>
+    <input type="date" name="date" required><br>
+    <button type="submit">Submit</button>
+  </form>
+  <script>
+    document.getElementById('taskForm').onsubmit = async function(e) {
+      e.preventDefault();
+      let data = new FormData(this);
+      let jsonData = Object.fromEntries(data.entries());
+      let res = await fetch('/api/tasks/', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + localStorage.getItem('token'),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(jsonData)
+      });
+      if (res.ok) alert('Task logged successfully');
+      else alert('Error submitting task');
+    }
+  </script>
+</body>
+</html>
