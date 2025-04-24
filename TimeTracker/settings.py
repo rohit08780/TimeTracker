@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'timetracker',
+    'tracker',
 ]
 
 MIDDLEWARE = [
@@ -86,11 +86,11 @@ DATABASES = {
         'USER': 'postgres',
         'PASSWORD': '123@45', 
         'HOST': 'localhost',
-        'POST': '5432'
+        'PORT': '5432'
     },
 }
 
-AUTH_USER_MODEL = 'timetracker.User'
+AUTH_USER_MODEL = 'tracker.User'
 
 
 # Password validation
