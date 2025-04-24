@@ -2,6 +2,83 @@
 <html>
 <head>
   <title>Manager Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f4f6f8;
+    }
+
+    h2 {
+      color: #333;
+    }
+
+    label {
+      margin-right: 15px;
+    }
+
+    input[type="date"], input[type="text"], select {
+      padding: 5px;
+      margin: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      padding: 6px 12px;
+      margin: 5px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background-color: white;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border: 1px solid #ccc;
+    }
+
+    th {
+      background-color: #007bff;
+      color: white;
+    }
+
+    textarea {
+      width: 100%;
+      height: 60px;
+      padding: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      resize: vertical;
+    }
+
+    form button {
+      margin-right: 5px;
+      background-color: #28a745;
+    }
+
+    form button[name="action"][value="reject"] {
+      background-color: #dc3545;
+    }
+
+    form button:hover {
+      opacity: 0.9;
+    }
+
+  </style>
 </head>
 <body>
   <h2>Manager Dashboard</h2>
@@ -21,7 +98,7 @@
   
   <button onclick="exportCSV()">Export as CSV</button>
 
-  <table border="1">
+  <table>
     <thead>
       <tr>
         <th>User</th><th>Title</th><th>Date</th><th>Hours</th><th>Status</th><th>Comment</th><th>Action</th>
@@ -41,7 +118,6 @@
             <input type="hidden" name="task_id" value="{{ task.id }}">
             <label for="manager_comment">Manager Comment</label>
             <textarea name="manager_comment" required>{{ task.manager_comment }}</textarea><br>
-            
             <button name="action" value="approve">Approve</button>
             <button name="action" value="reject">Reject</button>
           </form>
@@ -58,7 +134,6 @@
       const status = document.getElementById('statusFilter').value;
       const username = document.getElementById('userFilter').value;
 
-      // Building URL with filters
       let url = '/api/tasks/';
       const params = [];
       if (start) params.push(`date_from=${start}`);
@@ -123,7 +198,6 @@
       const status = document.getElementById('statusFilter').value;
       const username = document.getElementById('userFilter').value;
 
-      // Building URL for export
       let url = '/api/tasks/export/';
       const params = [];
       if (start) params.push(`date_from=${start}`);

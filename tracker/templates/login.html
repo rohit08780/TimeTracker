@@ -4,79 +4,144 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Time Tracker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #007bff;
+        }
+
+        form {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 500px;
+            margin: 20px auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #task-list {
+            max-width: 500px;
+            margin: 30px auto;
+        }
+
+        #task-list div {
+            background-color: #e9f5ff;
+            border-left: 4px solid #007bff;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+        }
+    </style>
 </head>
 <body>
     <h1>Employee Time Tracker</h1>
     <form id="task-form">
         <label for="title">Task Title:</label>
-        <input type="text" id="title" required><br><br>
+        <input type="text" id="title" required>
 
         <label for="description">Description:</label>
-        <textarea id="description" required></textarea><br><br>
+        <textarea id="description" required></textarea>
 
         <label for="hours">Hours Spent:</label>
-        <input type="number" id="hours" min="1" max="8" required><br><br>
+        <input type="number" id="hours" min="1" max="8" required>
 
         <label for="date">Date:</label>
-        <input type="date" id="date" required><br><br>
+        <input type="date" id="date" required>
 
         <button type="submit">Log Task</button>
     </form>
 
     <div id="task-list"></div>
 
-    <script src="script.js"></script>
+    <script>
+        document.getElementById('task-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const taskData = {
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                hours_spent: document.getElementById('hours').value,
+                date: document.getElementById('date').value
+            };
+
+            fetch('http://127.0.0.1:8000/api/tasks/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                },
+                body: JSON.stringify(taskData)
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to log task');
+                return response.json();
+            })
+            .then(data => {
+                alert('Task Logged Successfully!');
+                loadTasks();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to log task. Are you logged in?');
+            });
+        });
+
+        function loadTasks() {
+            fetch('http://127.0.0.1:8000/api/tasks/', {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                let taskList = document.getElementById('task-list');
+                taskList.innerHTML = '';
+                data.forEach(task => {
+                    let taskElement = document.createElement('div');
+                    taskElement.innerHTML = `<strong>${task.title}</strong><br>${task.description}<br>${task.hours_spent} hours on ${task.date}`;
+                    taskList.appendChild(taskElement);
+                });
+            });
+        }
+
+        loadTasks();
+    </script>
 </body>
 </html>
-
-
-<script>
-    // script.js
-
-document.getElementById('task-form').addEventListener('submit', function(event) {
-    event.preventDefault();
-
-    const taskData = {
-        title: document.getElementById('title').value,
-        description: document.getElementById('description').value,
-        hours_spent: document.getElementById('hours').value,
-        date: document.getElementById('date').value
-    };
-
-    fetch('http://127.0.0.1:8000/api/tasks/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
-        },
-        body: JSON.stringify(taskData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        alert('Task Logged Successfully!');
-        loadTasks();
-    })
-    .catch(error => console.error('Error:', error));
-});
-
-function loadTasks() {
-    fetch('http://127.0.0.1:8000/api/tasks/', {
-        headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        let taskList = document.getElementById('task-list');
-        taskList.innerHTML = '';
-        data.forEach(task => {
-            let taskElement = document.createElement('div');
-            taskElement.innerHTML = `<strong>${task.title}</strong><br>${task.description}<br>${task.hours_spent} hours on ${task.date}`;
-            taskList.appendChild(taskElement);
-        });
-    });
-}
-
-loadTasks();
-
-</script>
